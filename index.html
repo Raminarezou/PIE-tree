@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,90 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PIE Etymology Tree</title>
     <style>
-        /* General styles */
-        body { font-family: sans-serif; padding: 10px; }
-        
-        /* Tree styles */
-        ul { list-style-type: none; padding-left: 20px; }
-        
-        /* This is the clickable item */
+        /* BASE STYLES - Clean, modern, similar to system fonts */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0; /* Light gray background */
+            padding: 20px;
+        }
+
+        /* MAIN CONTAINER - Mimics a macOS window */
+        #container {
+            background-color: #ffffff; /* White content area */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            padding: 10px 0;
+            margin: 0 auto;
+            max-width: 900px;
+        }
+
+        /* TREE NODE STYLES - Mimics a clickable list item */
+        ul { list-style-type: none; padding-left: 0; margin: 0; }
+        ul ul { padding-left: 20px; border-left: 1px solid #eee; } /* Subtle hierarchy line */
+
         .tree-node {
-            cursor: pointer; /* Show a "pointer" on hover */
-            padding: 5px;
-            background-color: #f4f4f4;
-            border-bottom: 1px solid #ddd;
-            margin-top: 2px;
+            cursor: pointer;
+            padding: 8px 20px; /* More padding */
+            margin: 0;
+            transition: background-color 0.15s ease-in-out; /* Smooth hover */
+            display: flex; /* Aligns text and ID */
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee; /* Light separator line */
         }
         
-        /* This holds the children, hidden by default */
+        /* HOVER/SELECTED STATE - Clean blue highlight */
+        .tree-node:hover {
+            background-color: #e8e8e8; /* Light gray on hover */
+        }
+
+        /* PAGE ID STYLES - Subtler, on the right */
+        .pageid {
+            color: #666; 
+            font-size: 0.85em;
+            margin-left: 15px;
+            font-weight: 500;
+        }
+
+        /* TREE CHILDREN - Initially hidden */
         .tree-children {
-            display: none; /* Hide children by default */
-            padding-left: 20px;
-            border-left: 1px solid #ccc;
+            display: none;
+            padding: 0;
         }
         
-        /* This class is added by JavaScript to show the children */
+        /* Expands when 'open' is toggled */
         .open > .tree-children {
-            display: block; /* Show children when "open" */
+            display: block;
+        }
+
+        /* Ensure the root node gets a clean look */
+        #container > ul > li > .tree-node {
+            border-top: none; /* No top border on the first item */
         }
     </style>
 </head>
 <body>
 
-    <h1>PIE Etymology Project</h1>
-    
     <div id="container">
-        <p>Loading data... (This may take a moment)</p>
+        <h1>PIE Etymology Project</h1>
+        
+        <div id="tree-root">
+            <p style="padding: 20px;">Loading data... (This may take a moment)</p>
+        </div>
     </div>
 
     <script>
-        // This is the main function that builds the tree
-        // It's "recursive" - it calls itself to build children
+        // Main function to build the tree, takes the current data and the element to attach to
         function buildTree(dataObject, parentElement) {
-            
-            // Get all the keys from the data (e.g., "Category:Lemmas")
             const keys = Object.keys(dataObject);
 
             keys.forEach(key => {
-                // 1. Create the list item (the container)
+                const nodeData = dataObject[key];
                 const li = document.createElement('li');
-                
-                // 2. Create the visible, clickable node
                 const node = document.createElement('div');
                 node.className = 'tree-node';
-                node.textContent = key; // Set the text
                 
-                // 3. Create the container for children (initially empty and hidden)
+                // --- Node Content ---
+                const keySpan = document.createElement('span');
+                keySpan.textContent = key;
+                node.appendChild(keySpan);
+                
+                // Check and add the PageID
+                if (nodeData && nodeData.identifier && nodeData.identifier.type === 'pageid' && nodeData.identifier.value) {
+                    const pageIdSpan = document.createElement('span');
+                    pageIdSpan.className = 'pageid';
+                    pageIdSpan.textContent = ;
+                    node.appendChild(pageIdSpan);
+                }
+                // --- End Node Content ---
+
                 const childrenContainer = document.createElement('ul');
                 childrenContainer.className = 'tree-children';
 
-                // 4. Put the node and its children container into the list item
                 li.appendChild(node);
                 li.appendChild(childrenContainer);
-                
-                // 5. Add this new item to the parent element in the HTML
                 parentElement.appendChild(li);
 
-                // 6. The "Magic": Add a click listener
-                node.addEventListener('click', () => {
-                    // Check if we've already built the children
-                    // We only build it ONCE, on the first click
+                // Add the click listener for expansion
+                node.addEventListener('click', (event) => {
+                    // Prevent the click from bubbling up if we had deeper nested clicks
+                    event.stopPropagation();
+
+                    // If it's the first click, check for and build children
                     if (childrenContainer.innerHTML === '') {
-                        
-                        // Check if this node actually has children
-                        const nodeData = dataObject[key];
-                        if (nodeData && nodeData.children) {
-                            // If it does, call this same function
-                            // to build its children
-                            buildTree(nodeData.children, childrenContainer);
+                        const nextLevelData = nodeData.children;
+                        if (Object.keys(nextLevelData).length > 0) {
+                            buildTree(nextLevelData, childrenContainer);
                         } else {
-                            // If no children, just show a "No children" message
-                            childrenContainer.innerHTML = '<li>(No children)</li>';
+                            childrenContainer.innerHTML = '<li style="padding: 5px 20px; color:#999; font-size: 0.9em;">(No further children)</li>';
                         }
                     }
-                    
-                    // Toggle the "open" class on the list item (li)
-                    // This makes the CSS hide or show the children
+                    // Toggle the "open" class to show/hide the children
                     li.classList.toggle('open');
                 });
             });
@@ -97,24 +131,26 @@
 
         // This is where the script starts
         window.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('container');
+            const rootContainer = document.getElementById('tree-root');
 
             fetch('wiki.json')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    // Success! Clear the "Loading..." message
-                    container.innerHTML = ''; 
-
-                    // Create the root 'ul' for the whole tree
+                    rootContainer.innerHTML = ''; 
                     const rootUl = document.createElement('ul');
-                    container.appendChild(rootUl);
-
-                    // Start the tree-building process
+                    rootContainer.appendChild(rootUl);
+                    
+                    // Start the tree-building process from the root
                     buildTree(data, rootUl);
                 })
                 .catch(error => {
                     console.error('Error fetching the JSON:', error);
-                    container.innerHTML = '<p style="color: red;">Error: Could not load data file.</p>';
+                    rootContainer.innerHTML = '<p style="color: red; padding: 20px;">Error: Could not load data file. Check the browser console for details.</p>';
                 });
         });
     </script>
