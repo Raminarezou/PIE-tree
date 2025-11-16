@@ -1,1 +1,65 @@
-<h1>My Etymology Project</h1>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIE Etymology Tree</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #container { padding: 10px; border: 1px solid #ccc; }
+        .key { padding: 5px; background-color: #f4f4f4; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <h1>PIE Etymology Project</h1>
+    
+    <div id="container">
+        <p>Loading data... (This may take a moment)</p>
+    </div>
+
+    <script>
+        // This script will run after the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('container');
+
+            // Fetch your giant JSON file
+            fetch('wiki.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // This is the step that parses the 33.2MB
+                })
+                .then(data => {
+                    // Success! The data is loaded.
+                    container.innerHTML = ''; // Clear the "Loading..." message
+
+                    // Get all the top-level keys from the file
+                    const keys = Object.keys(data);
+
+                    // Create a heading
+                    const h = document.createElement('h3');
+                    h.textContent = 'Top-Level Categories:';
+                    container.appendChild(h);
+
+                    // Loop through the keys and display them
+                    keys.forEach(key => {
+                        const p = document.createElement('p');
+                        p.textContent = key;
+                        p.className = 'key'; // Apply the simple style
+                        container.appendChild(p);
+                    });
+                })
+                .catch(error => {
+                    // If something went wrong
+                    console.error('Error fetching the JSON:', error);
+                    container.innerHTML = '<p style="color: red;">Error: Could not load data file.</p>';
+                });
+        });
+    </script>
+
+</body>
+</html>
+
