@@ -5,76 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PIE Etymology Tree</title>
     <style>
-        /* BASE STYLES - Clean, modern, similar to system fonts */
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f0f0; /* Light gray background */
-            padding: 20px;
-        }
-
-        /* MAIN CONTAINER - Mimics a macOS window */
-        #container {
-            background-color: #ffffff; /* White content area */
-            border-radius: 10px; /* Rounded corners */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            padding: 10px 0;
-            margin: 0 auto;
-            max-width: 900px;
-        }
-
-        /* TREE NODE STYLES - Mimics a clickable list item */
-        ul { list-style-type: none; padding-left: 0; margin: 0; }
-        ul ul { padding-left: 20px; border-left: 1px solid #eee; } /* Subtle hierarchy line */
-
+        /* Minimalist Styles */
+        body { font-family: sans-serif; padding: 20px; }
+        
+        /* Tree styles */
+        ul { list-style-type: none; padding-left: 20px; margin: 0; }
+        ul ul { border-left: 1px solid #ccc; } /* Keep the subtle hierarchy line */
+        
+        /* This is the clickable item */
         .tree-node {
             cursor: pointer;
-            padding: 8px 20px; /* More padding */
-            margin: 0;
-            transition: background-color 0.15s ease-in-out; /* Smooth hover */
-            display: flex; /* Aligns text and ID */
+            padding: 5px 0;
+            border-bottom: 1px solid #eee; 
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid #eee; /* Light separator line */
         }
         
-        /* HOVER/SELECTED STATE - Clean blue highlight */
-        .tree-node:hover {
-            background-color: #e8e8e8; /* Light gray on hover */
-        }
-
-        /* PAGE ID STYLES - Subtler, on the right */
+        /* Style for the PageID number */
         .pageid {
-            color: #666; 
+            color: #555; 
             font-size: 0.85em;
-            margin-left: 15px;
-            font-weight: 500;
+            margin-left: 10px;
         }
 
-        /* TREE CHILDREN - Initially hidden */
+        /* This holds the children, hidden by default */
         .tree-children {
             display: none;
-            padding: 0;
+            padding: 5px 0;
         }
         
-        /* Expands when 'open' is toggled */
+        /* This class is added by JavaScript to show the children */
         .open > .tree-children {
             display: block;
-        }
-
-        /* Ensure the root node gets a clean look */
-        #container > ul > li > .tree-node {
-            border-top: none; /* No top border on the first item */
         }
     </style>
 </head>
 <body>
 
+    <h1>PIE Etymology Project</h1>
+    
     <div id="container">
-        <h1>PIE Etymology Project</h1>
-        
-        <div id="tree-root">
-            <p style="padding: 20px;">Loading data... (This may take a moment)</p>
-        </div>
+        <p>Loading data... (This may take a moment)</p>
     </div>
 
     <script>
@@ -97,7 +69,7 @@
                 if (nodeData && nodeData.identifier && nodeData.identifier.type === 'pageid' && nodeData.identifier.value) {
                     const pageIdSpan = document.createElement('span');
                     pageIdSpan.className = 'pageid';
-                    pageIdSpan.textContent = ;
+                    pageIdSpan.textContent = `PageID: ${nodeData.identifier.value}`;
                     node.appendChild(pageIdSpan);
                 }
                 // --- End Node Content ---
@@ -111,7 +83,7 @@
 
                 // Add the click listener for expansion
                 node.addEventListener('click', (event) => {
-                    // Prevent the click from bubbling up if we had deeper nested clicks
+                    // Prevent the click from bubbling up 
                     event.stopPropagation();
 
                     // If it's the first click, check for and build children
@@ -120,7 +92,7 @@
                         if (Object.keys(nextLevelData).length > 0) {
                             buildTree(nextLevelData, childrenContainer);
                         } else {
-                            childrenContainer.innerHTML = '<li style="padding: 5px 20px; color:#999; font-size: 0.9em;">(No further children)</li>';
+                            childrenContainer.innerHTML = '<li style="padding: 5px 0; color:#999; font-size: 0.9em;">(No further children)</li>';
                         }
                     }
                     // Toggle the "open" class to show/hide the children
@@ -131,7 +103,7 @@
 
         // This is where the script starts
         window.addEventListener('DOMContentLoaded', () => {
-            const rootContainer = document.getElementById('tree-root');
+            const rootContainer = document.getElementById('container');
 
             fetch('wiki.json')
                 .then(response => {
