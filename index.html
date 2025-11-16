@@ -6,9 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PIE Etymology Tree</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        #container { padding: 10px; border: 1px solid #ccc; }
-        .key { padding: 5px; background-color: #f4f4f4; border-bottom: 1px solid #ddd; }
+        /* General styles */
+        body { font-family: sans-serif; padding: 10px; }
+        
+        /* Tree styles */
+        ul { list-style-type: none; padding-left: 20px; }
+        
+        /* This is the clickable item */
+        .tree-node {
+            cursor: pointer; /* Show a "pointer" on hover */
+            padding: 5px;
+            background-color: #f4f4f4;
+            border-bottom: 1px solid #ddd;
+            margin-top: 2px;
+        }
+        
+        /* This holds the children, hidden by default */
+        .tree-children {
+            display: none; /* Hide children by default */
+            padding-left: 20px;
+            border-left: 1px solid #ccc;
+        }
+        
+        /* This class is added by JavaScript to show the children */
+        .open > .tree-children {
+            display: block; /* Show children when "open" */
+        }
     </style>
 </head>
 <body>
@@ -20,40 +43,76 @@
     </div>
 
     <script>
-        // This script will run after the page loads
+        // This is the main function that builds the tree
+        // It's "recursive" - it calls itself to build children
+        function buildTree(dataObject, parentElement) {
+            
+            // Get all the keys from the data (e.g., "Category:Lemmas")
+            const keys = Object.keys(dataObject);
+
+            keys.forEach(key => {
+                // 1. Create the list item (the container)
+                const li = document.createElement('li');
+                
+                // 2. Create the visible, clickable node
+                const node = document.createElement('div');
+                node.className = 'tree-node';
+                node.textContent = key; // Set the text
+                
+                // 3. Create the container for children (initially empty and hidden)
+                const childrenContainer = document.createElement('ul');
+                childrenContainer.className = 'tree-children';
+
+                // 4. Put the node and its children container into the list item
+                li.appendChild(node);
+                li.appendChild(childrenContainer);
+                
+                // 5. Add this new item to the parent element in the HTML
+                parentElement.appendChild(li);
+
+                // 6. The "Magic": Add a click listener
+                node.addEventListener('click', () => {
+                    // Check if we've already built the children
+                    // We only build it ONCE, on the first click
+                    if (childrenContainer.innerHTML === '') {
+                        
+                        // Check if this node actually has children
+                        const nodeData = dataObject[key];
+                        if (nodeData && nodeData.children) {
+                            // If it does, call this same function
+                            // to build its children
+                            buildTree(nodeData.children, childrenContainer);
+                        } else {
+                            // If no children, just show a "No children" message
+                            childrenContainer.innerHTML = '<li>(No children)</li>';
+                        }
+                    }
+                    
+                    // Toggle the "open" class on the list item (li)
+                    // This makes the CSS hide or show the children
+                    li.classList.toggle('open');
+                });
+            });
+        }
+
+        // This is where the script starts
         window.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('container');
 
-            // Fetch your giant JSON file
             fetch('wiki.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json(); // This is the step that parses the 33.2MB
-                })
+                .then(response => response.json())
                 .then(data => {
-                    // Success! The data is loaded.
-                    container.innerHTML = ''; // Clear the "Loading..." message
+                    // Success! Clear the "Loading..." message
+                    container.innerHTML = ''; 
 
-                    // Get all the top-level keys from the file
-                    const keys = Object.keys(data);
+                    // Create the root 'ul' for the whole tree
+                    const rootUl = document.createElement('ul');
+                    container.appendChild(rootUl);
 
-                    // Create a heading
-                    const h = document.createElement('h3');
-                    h.textContent = 'Top-Level Categories:';
-                    container.appendChild(h);
-
-                    // Loop through the keys and display them
-                    keys.forEach(key => {
-                        const p = document.createElement('p');
-                        p.textContent = key;
-                        p.className = 'key'; // Apply the simple style
-                        container.appendChild(p);
-                    });
+                    // Start the tree-building process
+                    buildTree(data, rootUl);
                 })
                 .catch(error => {
-                    // If something went wrong
                     console.error('Error fetching the JSON:', error);
                     container.innerHTML = '<p style="color: red;">Error: Could not load data file.</p>';
                 });
@@ -62,4 +121,3 @@
 
 </body>
 </html>
-
